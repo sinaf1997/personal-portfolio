@@ -3,6 +3,28 @@ import path from 'path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 
+function getSiteUrl() {
+  if (process.env.VITE_SITE_URL) {
+    return process.env.VITE_SITE_URL.replace(/\/$/, '')
+  }
+  if (process.env.VERCEL_ENV === 'production' && process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`
+  }
+  return 'http://localhost:5173'
+}
+
+function siteUrlMetaTags() {
+  const siteUrl = getSiteUrl()
+  return {
+    name: 'site-url-meta-tags',
+    transformIndexHtml(html: string) {
+      return html.replace(/%VITE_SITE_URL%/g, siteUrl)
+    },
+  }
+}
 
 function figmaAssetResolver() {
   return {
@@ -18,6 +40,7 @@ function figmaAssetResolver() {
 
 export default defineConfig({
   plugins: [
+    siteUrlMetaTags(),
     figmaAssetResolver(),
     // The React and Tailwind plugins are both required for Make, even if
     // Tailwind is not being actively used – do not remove them
